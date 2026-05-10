@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: "Playfair Display", Georgia, serif;
+  --font-body: "Be Vietnam Pro", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background: #050010;
+  color: #f4eefb;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100dvh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(167, 139, 250, 0.4);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #7c3aed, #22d3ee);
+  border-radius: 999px;
+  border: 2px solid #050010;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a78bfa, #67e8f9);
+}
+
+@layer components {
+  .glass {
+    background: linear-gradient(
+      135deg,
+      rgba(167, 139, 250, 0.06),
+      rgba(34, 211, 238, 0.04) 60%,
+      rgba(255, 255, 255, 0.02)
+    );
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .glass-strong {
+    background: linear-gradient(
+      135deg,
+      rgba(167, 139, 250, 0.12),
+      rgba(34, 211, 238, 0.06)
+    );
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+  .text-glow {
+    text-shadow:
+      0 0 20px rgba(167, 139, 250, 0.6),
+      0 0 40px rgba(167, 139, 250, 0.3);
+  }
+  .text-gradient-heritage {
+    background: linear-gradient(135deg, #fde68a 0%, #a78bfa 50%, #67e8f9 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-violet {
+    background: linear-gradient(135deg, #a78bfa, #67e8f9);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #fde68a, #fbbf24, #d4a017);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .grain::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+    opacity: 0.05;
+    mix-blend-mode: overlay;
+  }
+}
+
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.gradient-border-anim {
+  position: relative;
+  isolation: isolate;
+}
+.gradient-border-anim::before {
+  content: "";
+  position: absolute;
+  inset: -1.5px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--angle, 0deg),
+    transparent 0%,
+    rgba(167, 139, 250, 0.9) 20%,
+    rgba(34, 211, 238, 0.9) 40%,
+    rgba(251, 191, 36, 0.9) 60%,
+    transparent 80%
+  );
+  z-index: -1;
+  animation: rotate-conic 5s linear infinite;
+}
+@keyframes rotate-conic {
+  to {
+    --angle: 360deg;
+  }
+}
+
+.path-draw {
+  stroke-dasharray: 600;
+  stroke-dashoffset: 600;
+  animation: pathDraw 1.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+@keyframes pathDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.path-flow {
+  stroke-dasharray: 4 10;
+  animation: pathFlow 1.6s linear infinite;
+}
+@keyframes pathFlow {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+.magnetic-button {
+  background: linear-gradient(
+    135deg,
+    rgba(124, 58, 237, 0.95),
+    rgba(34, 211, 238, 0.9)
+  );
+  background-size: 200% 200%;
+  background-position: 0% 50%;
+  transition:
+    background-position 0.5s ease,
+    transform 0.2s ease,
+    box-shadow 0.3s ease;
+}
+.magnetic-button:hover {
+  background-position: 100% 50%;
+  box-shadow:
+    0 0 30px rgba(167, 139, 250, 0.6),
+    0 0 60px rgba(34, 211, 238, 0.3);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid rgba(167, 139, 250, 0.7);
+  outline-offset: 2px;
+}
+
+input,
+select,
+textarea {
+  background: rgba(10, 1, 24, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #f4eefb;
+  border-radius: 10px;
+  padding: 10px 14px;
+  width: 100%;
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: rgba(167, 139, 250, 0.7);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+  background: rgba(20, 5, 40, 0.8);
+}
+input::placeholder,
+textarea::placeholder {
+  color: rgba(244, 238, 251, 0.3);
+}
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+select option {
+  background: #0a0118;
+  color: #f4eefb;
+}
+
+/* Loader */
+.loader-tree {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: drawTree 2s ease-out forwards;
+}
+@keyframes drawTree {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
