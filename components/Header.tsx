@@ -43,6 +43,11 @@ export default function Header({ session }: { session: SessionPayload | null }) 
         <nav className="flex gap-1 items-center text-sm flex-wrap">
           <NavLink href="/">Cây phả hệ</NavLink>
           <NavLink href="/kinship">Tìm quan hệ</NavLink>
+          {session?.role === "admin" && (
+            <NavLink href="/admin">
+              <span className="text-gold-300">◆</span> Admin
+            </NavLink>
+          )}
 
           {session ? (
             <>

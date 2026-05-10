@@ -1,17 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Member } from "@/lib/types";
+import Avatar from "@/components/Avatar";
 
 export default function EditForm({
   member,
   allMembers,
+  isAdmin = false,
 }: {
   member: Member;
   allMembers: Member[];
+  isAdmin?: boolean;
 }) {
   const router = useRouter();
   const [form, setForm] = useState({
@@ -27,9 +30,72 @@ export default function EditForm({
   });
   const [spouseIds, setSpouseIds] = useState<string[]>([...member.spouseIds]);
   const [saving, setSaving] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [currentAvatarUrl, setCurrentAvatarUrl] = useState(member.avatarUrl);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [msg, setMsg] = useState<{ type: "ok" | "err"; text: string } | null>(
     null
   );
+
+  const onDelete = async () => {
+    setSaving(true);
+    const res = await fetch(`/api/user/${member.id}`, { method: "DELETE" });
+    setSaving(false);
+    if (res.ok) {
+      router.push("/admin");
+      router.refresh();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setMsg({ type: "err", text: data.error ?? "Xoá thất bại" });
+      setConfirmDelete(false);
+    }
+  };
+
+  const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    uploadAvatar(file);
+    if (e.target) e.target.value = "";
+  };
+
+  const uploadAvatar = async (file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      setMsg({ type: "err", text: "Ảnh quá lớn (tối đa 5MB)." });
+      return;
+    }
+    setUploadingAvatar(true);
+    setMsg(null);
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch(`/api/admin/members/${member.id}/avatar`, {
+      method: "POST",
+      body: fd,
+    });
+    setUploadingAvatar(false);
+    if (res.ok) {
+      const data = await res.json();
+      setCurrentAvatarUrl(data.avatarUrl);
+      setMsg({ type: "ok", text: "✓ Đã cập nhật ảnh đại diện." });
+      router.refresh();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setMsg({ type: "err", text: data.error ?? "Upload thất bại" });
+    }
+  };
+
+  const removeAvatar = async () => {
+    setUploadingAvatar(true);
+    const res = await fetch(`/api/admin/members/${member.id}/avatar`, {
+      method: "DELETE",
+    });
+    setUploadingAvatar(false);
+    if (res.ok) {
+      setCurrentAvatarUrl(null);
+      setMsg({ type: "ok", text: "Đã xoá ảnh đại diện. Hiển thị gradient initials lại." });
+      router.refresh();
+    }
+  };
 
   const others = allMembers.filter((m) => m.id !== member.id);
   const possibleFathers = others.filter((m) => m.gender !== "female");
@@ -190,6 +256,66 @@ export default function EditForm({
           </Field>
         </Section>
 
+        {isAdmin && (
+          <Section title="Ảnh đại diện (admin only)">
+            <div className="flex items-start gap-5">
+              <Avatar
+                member={{
+                  id: member.id,
+                  name: member.name,
+                  avatarUrl: currentAvatarUrl,
+                }}
+                size={96}
+                style={{
+                  boxShadow:
+                    "inset 0 0 0 2px rgba(5,0,16,0.95), 0 0 20px rgba(167,139,250,0.4)",
+                }}
+              />
+              <div className="flex-1 min-w-0">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={onPickFile}
+                  className="hidden"
+                />
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingAvatar}
+                    data-cursor-hover
+                    type="button"
+                    className="magnetic-button px-4 py-2 rounded-full text-xs font-semibold text-white tracking-wide disabled:opacity-50"
+                  >
+                    {uploadingAvatar
+                      ? "Đang upload…"
+                      : currentAvatarUrl
+                      ? "📷 Đổi ảnh"
+                      : "📷 Tải ảnh lên"}
+                  </button>
+                  {currentAvatarUrl && (
+                    <button
+                      onClick={removeAvatar}
+                      disabled={uploadingAvatar}
+                      type="button"
+                      className="px-3 py-2 rounded-full bg-rose-base/15 hover:bg-rose-base/30 border border-rose-base/30 text-rose-glow text-xs font-medium transition disabled:opacity-50"
+                    >
+                      Xoá ảnh
+                    </button>
+                  )}
+                </div>
+                <p className="mt-2 text-[11px] text-white/40 leading-relaxed">
+                  JPG/PNG/WEBP/GIF, tối đa 5MB. Ảnh được lưu vào{" "}
+                  <code className="text-violet-glow/60">
+                    public/uploads/avatar/{member.id}.[ext]
+                  </code>
+                  . Nếu không có ảnh, hệ thống dùng gradient initials tự sinh.
+                </p>
+              </div>
+            </div>
+          </Section>
+        )}
+
         <Section title="Quan hệ huyết thống">
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Bố">
@@ -261,7 +387,7 @@ export default function EditForm({
           </p>
         </Section>
 
-        <div className="mt-8 flex gap-3 items-center">
+        <div className="mt-8 flex flex-wrap gap-3 items-center">
           <button
             onClick={save}
             disabled={saving}
@@ -276,8 +402,63 @@ export default function EditForm({
           >
             Hủy
           </Link>
+          {isAdmin && (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              data-cursor-hover
+              className="ml-auto px-4 py-2 rounded-full bg-rose-base/15 hover:bg-rose-base/30 border border-rose-base/30 text-rose-glow text-xs font-semibold transition"
+            >
+              🗑 Xoá thành viên
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Modal xác nhận xoá */}
+      {confirmDelete && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#050010]/70 backdrop-blur-sm"
+          onClick={() => setConfirmDelete(false)}
+        >
+          <motion.div
+            initial={{ scale: 0.9, y: 10 }}
+            animate={{ scale: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 250, damping: 25 }}
+            onClick={(e) => e.stopPropagation()}
+            className="glass-strong rounded-2xl p-6 max-w-md w-full grain relative border-rose-base/30"
+            style={{ borderWidth: 1 }}
+          >
+            <div className="font-mono text-[10px] tracking-[0.3em] text-rose-glow/70 mb-2">
+              ⚠ XÁC NHẬN XOÁ
+            </div>
+            <h3 className="font-display text-2xl text-rose-glow mb-3">
+              Xoá &ldquo;{member.name}&rdquo;?
+            </h3>
+            <p className="text-sm text-white/70 mb-4">
+              Hành động này KHÔNG THỂ HOÀN TÁC. Mọi tham chiếu (con cái, vợ/chồng)
+              sẽ tự được dọn về null.
+            </p>
+            <div className="flex gap-2 justify-end">
+              <button
+                onClick={() => setConfirmDelete(false)}
+                disabled={saving}
+                className="px-4 py-2 rounded-full glass text-sm hover:bg-white/10 transition"
+              >
+                Huỷ
+              </button>
+              <button
+                onClick={onDelete}
+                disabled={saving}
+                className="px-4 py-2 rounded-full bg-rose-base/30 hover:bg-rose-base/50 border border-rose-base/50 text-rose-glow text-sm font-semibold transition disabled:opacity-50"
+              >
+                {saving ? "Đang xoá..." : "Xoá vĩnh viễn"}
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </motion.div>
   );
 }

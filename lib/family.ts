@@ -293,3 +293,71 @@ export function syncSpouseSymmetry(
     }
   }
 }
+
+/**
+ * Tạo thành viên mới với ID tự sinh. Không tự đồng bộ spouse symmetry —
+ * gọi syncSpouseSymmetry sau nếu cần.
+ */
+export function createMember(
+  data: FamilyData,
+  partial: Partial<Omit<Member, "id">>
+): Member {
+  const newMember: Member = {
+    id: generateId(data),
+    name: partial.name?.trim() || "Người mới",
+    gender: (partial.gender as Member["gender"]) ?? "other",
+    birthYear: partial.birthYear ?? null,
+    deathYear: partial.deathYear ?? null,
+    birthPlace: partial.birthPlace ?? "",
+    occupation: partial.occupation ?? "",
+    biography: partial.biography ?? "",
+    fatherId: partial.fatherId ?? null,
+    motherId: partial.motherId ?? null,
+    spouseIds: Array.isArray(partial.spouseIds) ? [...partial.spouseIds] : [],
+    ownerEmail: partial.ownerEmail ?? null,
+    avatarUrl: partial.avatarUrl ?? null,
+  };
+  data.members.push(newMember);
+  return newMember;
+}
+
+export interface DeleteResult {
+  success: boolean;
+  affectedMembers: string[];
+  error?: string;
+}
+
+/**
+ * Xoá một thành viên VÀ dọn mọi tham chiếu tới id này:
+ *  - Bất kỳ ai đang có fatherId/motherId === id → chuyển về null
+ *  - Bất kỳ ai có id trong spouseIds → bỏ khỏi danh sách
+ * Trả về danh sách ID những thành viên bị ảnh hưởng để hiển thị thông báo.
+ */
+export function deleteMember(data: FamilyData, id: string): DeleteResult {
+  const idx = data.members.findIndex((m) => m.id === id);
+  if (idx === -1) {
+    return { success: false, affectedMembers: [], error: "Không tìm thấy" };
+  }
+
+  const affectedMembers: string[] = [];
+  for (const m of data.members) {
+    if (m.id === id) continue;
+    let touched = false;
+    if (m.fatherId === id) {
+      m.fatherId = null;
+      touched = true;
+    }
+    if (m.motherId === id) {
+      m.motherId = null;
+      touched = true;
+    }
+    if (m.spouseIds.includes(id)) {
+      m.spouseIds = m.spouseIds.filter((x) => x !== id);
+      touched = true;
+    }
+    if (touched) affectedMembers.push(m.id);
+  }
+
+  data.members.splice(idx, 1);
+  return { success: true, affectedMembers };
+}

@@ -13,6 +13,7 @@ export interface Member {
   motherId: string | null;
   spouseIds: string[];
   ownerEmail: string | null;
+  avatarUrl: string | null;
 }
 
 export interface FamilyData {

@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { calculateRelation } from "@/lib/kinship";
 import type { Member, FamilyData } from "@/lib/types";
-import { avatarGradient, initialsOf } from "@/lib/avatar";
+import Avatar from "@/components/Avatar";
 
 export default function KinshipClient({
   members,
@@ -159,15 +159,13 @@ function PersonPicker({
                 animation: "spin 30s linear infinite",
               }}
             />
-            <div
-              className="relative w-20 h-20 rounded-full flex items-center justify-center font-display text-xl font-bold text-[#0a0118]"
+            <Avatar
+              member={member}
+              size={80}
               style={{
-                background: avatarGradient(member.name),
                 boxShadow: `inset 0 0 0 2px rgba(5,0,16,0.95), 0 0 20px ${accentColor}`,
               }}
-            >
-              {initialsOf(member.name)}
-            </div>
+            />
           </motion.div>
         )}
         <select

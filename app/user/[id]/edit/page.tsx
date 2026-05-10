@@ -34,5 +34,5 @@ export default async function EditUserPage({
     );
   }
 
-  return <EditForm member={member} allMembers={data.members} />;
+  return <EditForm member={member} allMembers={data.members} isAdmin={session.role === "admin"} />;
 }

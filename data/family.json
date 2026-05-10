@@ -11,8 +11,11 @@
       "biography": "Cụ ông là người sáng lập dòng họ ở làng quê Bắc Ninh. Cụ đã trải qua hai cuộc kháng chiến chống Pháp và chống Mỹ.",
       "fatherId": null,
       "motherId": null,
-      "spouseIds": ["u2"],
-      "ownerEmail": null
+      "spouseIds": [
+        "u2"
+      ],
+      "ownerEmail": null,
+      "avatarUrl": "/uploads/avatar/u1.png?v=1778418255493"
     },
     {
       "id": "u2",
@@ -25,8 +28,11 @@
       "biography": "Cụ bà là người phụ nữ tần tảo, nuôi dạy 4 người con khôn lớn.",
       "fatherId": null,
       "motherId": null,
-      "spouseIds": ["u1"],
-      "ownerEmail": null
+      "spouseIds": [
+        "u1"
+      ],
+      "ownerEmail": null,
+      "avatarUrl": null
     },
     {
       "id": "u3",
@@ -39,8 +45,11 @@
       "biography": "Cụ ông từng dạy học ở trường làng nhiều năm.",
       "fatherId": null,
       "motherId": null,
-      "spouseIds": ["u4"],
-      "ownerEmail": null
+      "spouseIds": [
+        "u4"
+      ],
+      "ownerEmail": null,
+      "avatarUrl": null
     },
     {
       "id": "u4",
@@ -53,8 +62,11 @@
       "biography": "Cụ bà nổi tiếng khéo léo trong nội trợ.",
       "fatherId": null,
       "motherId": null,
-      "spouseIds": ["u3"],
-      "ownerEmail": null
+      "spouseIds": [
+        "u3"
+      ],
+      "ownerEmail": null,
+      "avatarUrl": null
     },
     {
       "id": "u5",
@@ -67,8 +79,11 @@
       "biography": "Bố là kỹ sư xây dựng, tham gia nhiều công trình lớn của đất nước.",
       "fatherId": "u1",
       "motherId": "u2",
-      "spouseIds": ["u6"],
-      "ownerEmail": "hung@example.com"
+      "spouseIds": [
+        "u6"
+      ],
+      "ownerEmail": "hung@example.com",
+      "avatarUrl": null
     },
     {
       "id": "u6",
@@ -81,8 +96,11 @@
       "biography": "Mẹ là bác sĩ Nhi khoa tại bệnh viện tỉnh.",
       "fatherId": "u3",
       "motherId": "u4",
-      "spouseIds": ["u5"],
-      "ownerEmail": "lan@example.com"
+      "spouseIds": [
+        "u5"
+      ],
+      "ownerEmail": "lan@example.com",
+      "avatarUrl": null
     },
     {
       "id": "u7",
@@ -95,8 +113,11 @@
       "biography": "Chú Dũng là sĩ quan quân đội đã nghỉ hưu.",
       "fatherId": "u1",
       "motherId": "u2",
-      "spouseIds": ["u8"],
-      "ownerEmail": null
+      "spouseIds": [
+        "u8"
+      ],
+      "ownerEmail": null,
+      "avatarUrl": null
     },
     {
       "id": "u8",
@@ -109,8 +130,11 @@
       "biography": "Vợ chú Dũng, làm kế toán doanh nghiệp.",
       "fatherId": null,
       "motherId": null,
-      "spouseIds": ["u7"],
-      "ownerEmail": null
+      "spouseIds": [
+        "u7"
+      ],
+      "ownerEmail": null,
+      "avatarUrl": null
     },
     {
       "id": "u9",
@@ -124,7 +148,8 @@
       "fatherId": "u3",
       "motherId": "u4",
       "spouseIds": [],
-      "ownerEmail": null
+      "ownerEmail": null,
+      "avatarUrl": null
     },
     {
       "id": "u10",
@@ -137,8 +162,11 @@
       "biography": "Là con trai cả của ông Hùng và bà Lan, hiện làm việc trong lĩnh vực công nghệ thông tin.",
       "fatherId": "u5",
       "motherId": "u6",
-      "spouseIds": ["u11"],
-      "ownerEmail": "tai@example.com"
+      "spouseIds": [
+        "u11"
+      ],
+      "ownerEmail": "tai@example.com",
+      "avatarUrl": null
     },
     {
       "id": "u11",
@@ -151,8 +179,11 @@
       "biography": "Vợ anh Tài, là giáo viên tiếng Anh.",
       "fatherId": null,
       "motherId": null,
-      "spouseIds": ["u10"],
-      "ownerEmail": null
+      "spouseIds": [
+        "u10"
+      ],
+      "ownerEmail": null,
+      "avatarUrl": null
     },
     {
       "id": "u12",
@@ -166,7 +197,8 @@
       "fatherId": "u5",
       "motherId": "u6",
       "spouseIds": [],
-      "ownerEmail": null
+      "ownerEmail": null,
+      "avatarUrl": null
     },
     {
       "id": "u13",
@@ -180,7 +212,8 @@
       "fatherId": "u10",
       "motherId": "u11",
       "spouseIds": [],
-      "ownerEmail": null
+      "ownerEmail": null,
+      "avatarUrl": null
     },
     {
       "id": "u14",
@@ -194,7 +227,8 @@
       "fatherId": "u10",
       "motherId": "u11",
       "spouseIds": [],
-      "ownerEmail": null
+      "ownerEmail": null,
+      "avatarUrl": null
     }
   ]
 }

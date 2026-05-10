@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Member, SessionPayload } from "@/lib/types";
-import { avatarGradient, initialsOf } from "@/lib/avatar";
+import Avatar from "./Avatar";
 
 export default function BioPanel({
   member,
@@ -66,16 +66,15 @@ export default function BioPanel({
                 filter: "blur(8px)",
               }}
             />
-            <div
-              className="relative w-28 h-28 sm:w-32 sm:h-32 rounded-full flex items-center justify-center font-display text-4xl font-bold text-[#0a0118]"
+            <Avatar
+              member={member}
+              size={128}
+              className="sm:!w-32 sm:!h-32"
               style={{
-                background: avatarGradient(member.name),
                 boxShadow:
                   "inset 0 0 0 3px rgba(5,0,16,0.95), 0 0 30px rgba(167,139,250,0.5)",
               }}
-            >
-              {initialsOf(member.name)}
-            </div>
+            />
           </motion.div>
 
           <div className="flex flex-col">

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Member } from "@/lib/types";
-import { avatarGradient, initialsOf } from "@/lib/avatar";
+import Avatar from "@/components/Avatar";
 
 export default function UserDetailView({
   member,
@@ -64,16 +64,15 @@ export default function UserDetailView({
                   filter: "blur(10px)",
                 }}
               />
-              <div
-                className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full flex items-center justify-center font-display text-5xl font-bold text-[#0a0118]"
+              <Avatar
+                member={member}
+                size={128}
+                className="sm:!w-40 sm:!h-40"
                 style={{
-                  background: avatarGradient(member.name),
                   boxShadow:
                     "inset 0 0 0 3px rgba(5,0,16,0.95), 0 0 40px rgba(167,139,250,0.6)",
                 }}
-              >
-                {initialsOf(member.name)}
-              </div>
+              />
             </motion.div>
 
             <div className="flex-1">

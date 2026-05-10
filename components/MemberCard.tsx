@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { Member } from "@/lib/types";
-import { avatarGradient, initialsOf } from "@/lib/avatar";
+import Avatar from "./Avatar";
 import clsx from "clsx";
 
 interface Props {
@@ -97,15 +97,13 @@ export default function MemberCard({
                 filter: "blur(2px)",
               }}
             />
-            <div
-              className="relative w-11 h-11 rounded-full flex items-center justify-center font-display text-base font-semibold text-[#0a0118]"
+            <Avatar
+              member={member}
+              size={44}
               style={{
-                background: avatarGradient(member.name),
                 boxShadow: `inset 0 0 0 2px rgba(5,0,16,0.9), 0 0 12px ${accent}`,
               }}
-            >
-              {initialsOf(member.name)}
-            </div>
+            />
             {member.deathYear != null && (
               <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-gold-400 flex items-center justify-center text-[8px] text-[#0a0118] font-bold shadow-glow-gold">
                 ✧

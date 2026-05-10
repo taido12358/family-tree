@@ -1,12 +1,30 @@
 import { NextResponse } from "next/server";
+import { promises as fs } from "fs";
+import path from "path";
 import { readFamily, writeFamily } from "@/lib/storage";
 import {
   findMember,
   canEdit,
   validateMemberUpdate,
   syncSpouseSymmetry,
+  deleteMember,
 } from "@/lib/family";
 import { getSession } from "@/lib/auth";
+
+const AVATAR_DIR = path.join(process.cwd(), "public", "uploads", "avatar");
+
+async function removeAvatarFiles(memberId: string) {
+  try {
+    const files = await fs.readdir(AVATAR_DIR);
+    for (const f of files) {
+      if (f.startsWith(`${memberId}.`)) {
+        await fs.unlink(path.join(AVATAR_DIR, f)).catch(() => null);
+      }
+    }
+  } catch {
+    /* directory may not exist yet */
+  }
+}
 
 export async function GET(
   _req: Request,
@@ -94,4 +112,39 @@ export async function PATCH(
 
   await writeFamily(data);
   return NextResponse.json({ member: data.members[idx] });
+}
+
+/**
+ * DELETE: chỉ admin xoá được thành viên. Tự dọn mọi tham chiếu
+ * (fatherId/motherId/spouseIds) trong các thành viên còn lại.
+ */
+export async function DELETE(
+  _req: Request,
+  { params }: { params: { id: string } }
+) {
+  const session = await getSession();
+  if (!session || session.role !== "admin") {
+    return NextResponse.json(
+      { error: "Chỉ admin có quyền xoá thành viên" },
+      { status: 403 }
+    );
+  }
+
+  const data = await readFamily();
+  const result = deleteMember(data, params.id);
+  if (!result.success) {
+    return NextResponse.json(
+      { error: result.error ?? "Xoá thất bại" },
+      { status: 404 }
+    );
+  }
+
+  // Xoá file ảnh đại diện kèm theo
+  await removeAvatarFiles(params.id);
+
+  await writeFamily(data);
+  return NextResponse.json({
+    deleted: params.id,
+    affectedMembers: result.affectedMembers,
+  });
 }
