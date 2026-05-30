@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -10,17 +10,53 @@ import Avatar from "@/components/Avatar";
 type SortKey = "name" | "birthYear" | "gender";
 type SortDir = "asc" | "desc";
 
+const STORAGE_KEY = "admin-member-order";
+
 export default function AdminClient({ members }: { members: Member[] }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [sortKey, setSortKey] = useState<SortKey>("birthYear");
+  const [sortKey, setSortKey] = useState<SortKey | null>("birthYear");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [orderedIds, setOrderedIds] = useState<string[]>(() =>
+    members.map((m) => m.id)
+  );
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Member | null>(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState<{
     type: "ok" | "err";
     text: string;
   } | null>(null);
+
+  // Load saved order from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        const ids = JSON.parse(saved) as string[];
+        const currentIds = members.map((m) => m.id);
+        const kept = ids.filter((id) => currentIds.includes(id));
+        const added = currentIds.filter((id) => !kept.includes(id));
+        const merged = [...kept, ...added];
+        setOrderedIds(merged);
+        setSortKey(null); // custom order active
+      }
+    } catch {
+      // ignore
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Sync new/removed members into orderedIds
+  useEffect(() => {
+    setOrderedIds((prev) => {
+      const currentIds = members.map((m) => m.id);
+      const kept = prev.filter((id) => currentIds.includes(id));
+      const added = currentIds.filter((id) => !kept.includes(id));
+      return [...kept, ...added];
+    });
+  }, [members]);
 
   // Stats
   const stats = useMemo(() => {
@@ -42,7 +78,11 @@ export default function AdminClient({ members }: { members: Member[] }) {
   }, [members]);
 
   const filtered = useMemo(() => {
-    let arr = [...members];
+    const memberMap = new Map(members.map((m) => [m.id, m]));
+    let arr = orderedIds
+      .map((id) => memberMap.get(id))
+      .filter(Boolean) as Member[];
+
     if (search.trim()) {
       const q = search.trim().toLowerCase();
       arr = arr.filter(
@@ -53,33 +93,115 @@ export default function AdminClient({ members }: { members: Member[] }) {
           m.occupation.toLowerCase().includes(q)
       );
     }
-    arr.sort((a, b) => {
-      let va: string | number = "";
-      let vb: string | number = "";
-      if (sortKey === "name") {
-        va = a.name;
-        vb = b.name;
-      } else if (sortKey === "birthYear") {
-        va = a.birthYear ?? 9999;
-        vb = b.birthYear ?? 9999;
-      } else {
-        va = a.gender;
-        vb = b.gender;
-      }
-      const cmp = va < vb ? -1 : va > vb ? 1 : 0;
-      return sortDir === "asc" ? cmp : -cmp;
-    });
-    return arr;
-  }, [members, search, sortKey, sortDir]);
 
-  const toggleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortDir(sortDir === "asc" ? "desc" : "asc");
-    } else {
-      setSortKey(key);
-      setSortDir("asc");
+    if (sortKey) {
+      arr = [...arr].sort((a, b) => {
+        let va: string | number = "";
+        let vb: string | number = "";
+        if (sortKey === "name") {
+          va = a.name;
+          vb = b.name;
+        } else if (sortKey === "birthYear") {
+          va = a.birthYear ?? 9999;
+          vb = b.birthYear ?? 9999;
+        } else {
+          va = a.gender;
+          vb = b.gender;
+        }
+        const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+        return sortDir === "asc" ? cmp : -cmp;
+      });
     }
+
+    return arr;
+  }, [members, search, sortKey, sortDir, orderedIds]);
+
+  const applySort = (key: SortKey) => {
+    let dir: SortDir = "asc";
+    if (sortKey === key) {
+      dir = sortDir === "asc" ? "desc" : "asc";
+    }
+    setSortKey(key);
+    setSortDir(dir);
+    // Apply this sort permanently to orderedIds so drag order inherits it
+    const memberMap = new Map(members.map((m) => [m.id, m]));
+    setOrderedIds((prev: string[]) =>
+      [...prev].sort((a, b) => {
+        const ma = memberMap.get(a)!;
+        const mb = memberMap.get(b)!;
+        let va: string | number = "";
+        let vb: string | number = "";
+        if (key === "name") {
+          va = ma.name;
+          vb = mb.name;
+        } else if (key === "birthYear") {
+          va = ma.birthYear ?? 9999;
+          vb = mb.birthYear ?? 9999;
+        } else {
+          va = ma.gender;
+          vb = mb.gender;
+        }
+        const cmp = va < vb ? -1 : va > vb ? 1 : 0;
+        return dir === "asc" ? cmp : -cmp;
+      })
+    );
+    localStorage.removeItem(STORAGE_KEY);
   };
+
+  // Drag handlers
+  const handleDragStart = (e: { dataTransfer: DataTransfer }, id: string) => {
+    setDragId(id);
+    setSortKey(null);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: { preventDefault: () => void; dataTransfer: DataTransfer }, id: string) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    if (id !== dragId) setDragOverId(id);
+  };
+
+  const handleDrop = (e: { preventDefault: () => void }, targetId: string) => {
+    e.preventDefault();
+    if (!dragId || dragId === targetId) {
+      setDragOverId(null);
+      return;
+    }
+    setOrderedIds((prev: string[]) => {
+      const arr = [...prev];
+      const from = arr.indexOf(dragId);
+      const to = arr.indexOf(targetId);
+      if (from < 0 || to < 0) return prev;
+      arr.splice(from, 1);
+      arr.splice(to, 0, dragId);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+      } catch {
+        // ignore
+      }
+      return arr;
+    });
+    setDragId(null);
+    setDragOverId(null);
+  };
+
+  const handleDragEnd = () => {
+    setDragId(null);
+    setDragOverId(null);
+  };
+
+  const resetOrder = () => {
+    const defaultIds = [...members]
+      .sort((a, b) => (a.birthYear ?? 9999) - (b.birthYear ?? 9999))
+      .map((m) => m.id);
+    setOrderedIds(defaultIds);
+    setSortKey("birthYear");
+    setSortDir("asc");
+    localStorage.removeItem(STORAGE_KEY);
+  };
+
+  const isDragging = dragId !== null;
+  const canDrag = !search.trim();
 
   const onDelete = async () => {
     if (!confirmDelete) return;
@@ -172,35 +294,55 @@ export default function AdminClient({ members }: { members: Member[] }) {
           placeholder="🔍 Tìm theo tên, quê, nghề, ID..."
           className="flex-1 min-w-[200px]"
         />
-        <div className="flex gap-1.5 text-xs">
+        <div className="flex gap-1.5 text-xs items-center flex-wrap">
           <SortBtn
             active={sortKey === "name"}
             dir={sortDir}
-            onClick={() => toggleSort("name")}
+            onClick={() => applySort("name")}
           >
             Tên
           </SortBtn>
           <SortBtn
             active={sortKey === "birthYear"}
             dir={sortDir}
-            onClick={() => toggleSort("birthYear")}
+            onClick={() => applySort("birthYear")}
           >
             Năm sinh
           </SortBtn>
           <SortBtn
             active={sortKey === "gender"}
             dir={sortDir}
-            onClick={() => toggleSort("gender")}
+            onClick={() => applySort("gender")}
           >
             Giới tính
           </SortBtn>
+          {sortKey === null && (
+            <button
+              onClick={resetOrder}
+              data-cursor-hover
+              className="px-2.5 py-1.5 rounded-lg bg-gold-300/15 text-gold-300 hover:bg-gold-300/25 transition font-mono text-[11px] tracking-wide"
+              title="Đặt lại về mặc định"
+            >
+              ⣿ Tuỳ chỉnh · Đặt lại
+            </button>
+          )}
         </div>
       </div>
+
+      {/* Drag hint */}
+      {canDrag && (
+        <p className="mb-2 text-[11px] text-white/30 text-center">
+          {sortKey === null
+            ? "⣿ Thứ tự tuỳ chỉnh đang hoạt động — kéo hàng để sắp xếp"
+            : "⣿ Kéo các hàng để sắp xếp tuỳ chỉnh"}
+        </p>
+      )}
 
       {/* Table */}
       <div className="glass-strong rounded-2xl overflow-hidden grain relative">
         {/* Header row */}
-        <div className="hidden md:grid grid-cols-[auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-3 border-b border-white/5 font-mono text-[10px] tracking-[0.2em] text-violet-glow/60 uppercase">
+        <div className="hidden md:grid grid-cols-[1.5rem_auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-3 border-b border-white/5 font-mono text-[10px] tracking-[0.2em] text-violet-glow/60 uppercase">
+          <div />
           <div className="w-10">Avatar</div>
           <div>Họ tên / ID</div>
           <div className="w-20 text-center">Giới tính</div>
@@ -217,77 +359,101 @@ export default function AdminClient({ members }: { members: Member[] }) {
           </div>
         ) : (
           <div className="divide-y divide-white/5">
-            {filtered.map((m, i) => (
-              <motion.div
-                key={m.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: Math.min(i * 0.02, 0.3) }}
-                className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-3 items-center hover:bg-white/[0.03] transition group"
-              >
-                {/* Avatar */}
-                <Avatar
-                  member={m}
-                  size={40}
-                  style={{
-                    boxShadow: "inset 0 0 0 2px rgba(5,0,16,0.95)",
-                  }}
-                />
-
-                {/* Name + meta */}
-                <div className="min-w-0">
-                  <Link
-                    href={`/user/${m.id}`}
-                    className="font-display text-[15px] font-semibold hover:text-gold-300 transition-colors block truncate"
+            {filtered.map((m, i) => {
+              const isBeingDragged = dragId === m.id;
+              const isDropTarget = dragOverId === m.id && dragId !== m.id;
+              return (
+                <motion.div
+                  key={m.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: isBeingDragged ? 0.35 : 1 }}
+                  transition={{ delay: Math.min(i * 0.02, 0.3) }}
+                  draggable={canDrag}
+                  onDragStart={(e) => handleDragStart(e as unknown as React.DragEvent, m.id)}
+                  onDragOver={(e) => handleDragOver(e as unknown as React.DragEvent, m.id)}
+                  onDrop={(e) => handleDrop(e as unknown as React.DragEvent, m.id)}
+                  onDragEnd={handleDragEnd}
+                  className={`grid grid-cols-[1.5rem_auto_1fr_auto] md:grid-cols-[1.5rem_auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-3 items-center transition group ${
+                    isDropTarget
+                      ? "bg-violet-base/10 border-t-2 border-violet-glow/50"
+                      : "hover:bg-white/[0.03]"
+                  } ${canDrag ? "cursor-grab active:cursor-grabbing" : ""}`}
+                >
+                  {/* Drag handle */}
+                  <div
+                    className={`flex flex-col items-center justify-center gap-[3px] select-none transition-opacity ${
+                      canDrag ? "opacity-20 group-hover:opacity-50" : "opacity-0"
+                    }`}
                   >
-                    {m.name}
-                  </Link>
-                  <div className="font-mono text-[10px] text-violet-glow/50 truncate">
-                    {m.id} · {m.occupation || "—"}
+                    <span className="text-[10px] leading-none">⣿</span>
                   </div>
-                </div>
 
-                {/* Gender */}
-                <div className="hidden md:block w-20 text-center text-sm text-white/70">
-                  {m.gender === "male"
-                    ? "♂ Nam"
-                    : m.gender === "female"
-                    ? "♀ Nữ"
-                    : "—"}
-                </div>
+                  {/* Avatar */}
+                  <Avatar
+                    member={m}
+                    size={40}
+                    style={{
+                      boxShadow: "inset 0 0 0 2px rgba(5,0,16,0.95)",
+                    }}
+                  />
 
-                {/* Years */}
-                <div className="hidden md:block w-28 text-center font-mono text-xs text-white/60">
-                  {m.birthYear ?? "?"}
-                  {m.deathYear != null ? ` – ${m.deathYear}` : " – nay"}
-                </div>
+                  {/* Name + meta */}
+                  <div className="min-w-0">
+                    <Link
+                      href={`/user/${m.id}`}
+                      className="font-display text-[15px] font-semibold hover:text-gold-300 transition-colors block truncate"
+                      onClick={(e) => isDragging && e.preventDefault()}
+                    >
+                      {m.name}
+                    </Link>
+                    <div className="font-mono text-[10px] text-violet-glow/50 truncate">
+                      {m.id} · {m.occupation || "—"}
+                    </div>
+                  </div>
 
-                {/* Place */}
-                <div className="hidden md:block w-28 text-center text-xs text-white/50 truncate">
-                  {m.birthPlace || "—"}
-                </div>
+                  {/* Gender */}
+                  <div className="hidden md:block w-20 text-center text-sm text-white/70">
+                    {m.gender === "male"
+                      ? "♂ Nam"
+                      : m.gender === "female"
+                      ? "♀ Nữ"
+                      : "—"}
+                  </div>
 
-                {/* Actions */}
-                <div className="flex gap-1.5 justify-end col-start-3 md:col-auto">
-                  <Link
-                    href={`/user/${m.id}/edit`}
-                    data-cursor-hover
-                    className="px-2.5 py-1.5 rounded-lg glass text-xs hover:bg-violet-base/20 hover:text-violet-glow transition"
-                    title="Sửa"
-                  >
-                    ✎
-                  </Link>
-                  <button
-                    onClick={() => setConfirmDelete(m)}
-                    data-cursor-hover
-                    className="px-2.5 py-1.5 rounded-lg glass text-xs text-rose-glow/70 hover:text-rose-glow hover:bg-rose-base/20 transition"
-                    title="Xoá"
-                  >
-                    🗑
-                  </button>
-                </div>
-              </motion.div>
-            ))}
+                  {/* Years */}
+                  <div className="hidden md:block w-28 text-center font-mono text-xs text-white/60">
+                    {m.birthYear ?? "?"}
+                    {m.deathYear != null ? ` – ${m.deathYear}` : " – nay"}
+                  </div>
+
+                  {/* Place */}
+                  <div className="hidden md:block w-28 text-center text-xs text-white/50 truncate">
+                    {m.birthPlace || "—"}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-1.5 justify-end col-start-4 md:col-auto">
+                    <Link
+                      href={`/user/${m.id}/edit`}
+                      data-cursor-hover
+                      className="px-2.5 py-1.5 rounded-lg glass text-xs hover:bg-violet-base/20 hover:text-violet-glow transition"
+                      title="Sửa"
+                      onClick={(e) => isDragging && e.preventDefault()}
+                    >
+                      ✎
+                    </Link>
+                    <button
+                      onClick={() => setConfirmDelete(m)}
+                      data-cursor-hover
+                      className="px-2.5 py-1.5 rounded-lg glass text-xs text-rose-glow/70 hover:text-rose-glow hover:bg-rose-base/20 transition"
+                      title="Xoá"
+                    >
+                      🗑
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -384,7 +550,6 @@ function DeleteModal({
   onConfirm: () => void;
   busy: boolean;
 }) {
-  // Đếm references
   const childrenCount = members.filter(
     (m) => m.fatherId === member.id || m.motherId === member.id
   ).length;

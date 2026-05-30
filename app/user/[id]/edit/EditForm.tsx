@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Member } from "@/lib/types";
 import Avatar from "@/components/Avatar";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export default function EditForm({
   member,
@@ -29,6 +30,7 @@ export default function EditForm({
     motherId: member.motherId ?? "",
   });
   const [spouseIds, setSpouseIds] = useState<string[]>([...member.spouseIds]);
+  const [spouseSearch, setSpouseSearch] = useState("");
   const [saving, setSaving] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -319,67 +321,100 @@ export default function EditForm({
         <Section title="Quan hệ huyết thống">
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Bố">
-              <select
+              <SearchableSelect
                 value={form.fatherId}
-                onChange={(e) => update("fatherId", e.target.value)}
-              >
-                <option value="">— không —</option>
-                {possibleFathers.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.birthYear ?? "?"})
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => update("fatherId", v)}
+                options={possibleFathers.map((m) => ({
+                  value: m.id,
+                  label: `${m.name} (${m.birthYear ?? "?"})`,
+                }))}
+                placeholder="Tìm tên bố..."
+              />
             </Field>
             <Field label="Mẹ">
-              <select
+              <SearchableSelect
                 value={form.motherId}
-                onChange={(e) => update("motherId", e.target.value)}
-              >
-                <option value="">— không —</option>
-                {possibleMothers.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.birthYear ?? "?"})
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => update("motherId", v)}
+                options={possibleMothers.map((m) => ({
+                  value: m.id,
+                  label: `${m.name} (${m.birthYear ?? "?"})`,
+                }))}
+                placeholder="Tìm tên mẹ..."
+              />
             </Field>
           </div>
         </Section>
 
         <Section title="Vợ / Chồng">
-          <div className="glass rounded-xl p-3 max-h-72 overflow-y-auto">
-            {others.length === 0 ? (
-              <span className="text-white/40 text-sm italic">
-                Không có thành viên khác.
-              </span>
-            ) : (
-              <div className="space-y-1">
-                {others.map((m) => (
-                  <label
-                    key={m.id}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition"
+          <div className="glass rounded-xl overflow-hidden">
+            {others.length > 0 && (
+              <div
+                className="flex items-center gap-2 px-3 py-2"
+                style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}
+              >
+                <span className="text-white/30 text-xs shrink-0">🔍</span>
+                <input
+                  type="text"
+                  value={spouseSearch}
+                  onChange={(e) => setSpouseSearch(e.target.value)}
+                  placeholder="Tìm tên vợ/chồng..."
+                  className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none"
+                />
+                {spouseSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setSpouseSearch("")}
+                    className="text-white/30 hover:text-white/60 text-xs transition shrink-0"
                   >
-                    <input
-                      type="checkbox"
-                      checked={spouseIds.includes(m.id)}
-                      onChange={() => toggleSpouse(m.id)}
-                      className="w-4 h-4 accent-violet-glow"
-                      style={{ width: 16, height: 16 }}
-                    />
-                    <span className="font-medium text-sm">{m.name}</span>
-                    <span className="text-white/40 text-xs font-mono">
-                      {m.gender === "male"
-                        ? "♂"
-                        : m.gender === "female"
-                        ? "♀"
-                        : "—"}{" "}
-                      · {m.birthYear ?? "?"}
-                    </span>
-                  </label>
-                ))}
+                    ✕
+                  </button>
+                )}
               </div>
             )}
+            <div className="p-3 max-h-64 overflow-y-auto">
+              {others.length === 0 ? (
+                <span className="text-white/40 text-sm italic">
+                  Không có thành viên khác.
+                </span>
+              ) : (() => {
+                const visible = spouseSearch
+                  ? others.filter((m) =>
+                      m.name.toLowerCase().includes(spouseSearch.toLowerCase())
+                    )
+                  : others;
+                return visible.length === 0 ? (
+                  <span className="text-white/30 text-sm italic">
+                    Không tìm thấy &ldquo;{spouseSearch}&rdquo;.
+                  </span>
+                ) : (
+                  <div className="space-y-1">
+                    {visible.map((m) => (
+                      <label
+                        key={m.id}
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={spouseIds.includes(m.id)}
+                          onChange={() => toggleSpouse(m.id)}
+                          className="w-4 h-4 accent-violet-glow"
+                          style={{ width: 16, height: 16 }}
+                        />
+                        <span className="font-medium text-sm">{m.name}</span>
+                        <span className="text-white/40 text-xs font-mono">
+                          {m.gender === "male"
+                            ? "♂"
+                            : m.gender === "female"
+                            ? "♀"
+                            : "—"}{" "}
+                          · {m.birthYear ?? "?"}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
           </div>
           <p className="mt-2 text-[11px] text-white/40">
             Khi tích chọn, hệ thống sẽ tự đồng bộ hai chiều: người được chọn cũng
