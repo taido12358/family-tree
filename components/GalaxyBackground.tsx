@@ -22,6 +22,11 @@ export default function GalaxyBackground() {
     let raf = 0;
     let dpr = Math.min(window.devicePixelRatio || 1, 2);
 
+    // Tôn trọng prefers-reduced-motion: vẽ trường sao tĩnh, không chạy vòng rAF
+    const reduceMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     interface Star {
       x: number;
       y: number;
@@ -60,15 +65,17 @@ export default function GalaxyBackground() {
     const draw = () => {
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       for (const s of stars) {
-        s.y += s.vy;
-        s.x += s.vx;
-        s.tw += 0.03;
-        if (s.y > window.innerHeight + 5) {
-          s.y = -5;
-          s.x = Math.random() * window.innerWidth;
+        if (!reduceMotion) {
+          s.y += s.vy;
+          s.x += s.vx;
+          s.tw += 0.03;
+          if (s.y > window.innerHeight + 5) {
+            s.y = -5;
+            s.x = Math.random() * window.innerWidth;
+          }
+          if (s.x < -5) s.x = window.innerWidth + 5;
+          if (s.x > window.innerWidth + 5) s.x = -5;
         }
-        if (s.x < -5) s.x = window.innerWidth + 5;
-        if (s.x > window.innerWidth + 5) s.x = -5;
 
         const tw = (Math.sin(s.tw) + 1) / 2; // 0..1
         const alpha = s.a * (0.5 + tw * 0.5);
@@ -89,7 +96,8 @@ export default function GalaxyBackground() {
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx.fill();
       }
-      raf = requestAnimationFrame(draw);
+      // Giảm chuyển động → vẽ một khung tĩnh rồi dừng, không lặp rAF
+      if (!reduceMotion) raf = requestAnimationFrame(draw);
     };
 
     init();

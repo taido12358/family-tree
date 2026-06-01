@@ -3,3 +3,14 @@ node_modules
 .env*.local
 .DS_Store
 *.log
+
+# Dữ liệu cục bộ — không đẩy lên git
+/data/
+
+# Thư mục public — không đẩy lên git (chỉ giữ .gitkeep để còn thư mục upload khi clone)
+/public/*
+!/public/uploads/
+/public/uploads/*
+!/public/uploads/avatar/
+/public/uploads/avatar/*
+!/public/uploads/avatar/.gitkeep

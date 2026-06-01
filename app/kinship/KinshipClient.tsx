@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { calculateRelation } from "@/lib/kinship";
 import type { Member, FamilyData } from "@/lib/types";
 import Avatar from "@/components/Avatar";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export default function KinshipClient({
   members,
@@ -31,7 +32,7 @@ export default function KinshipClient({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 1.9 }}
+      transition={{ duration: 0.3, delay: 0 }}
       className="max-w-4xl mx-auto"
     >
       <div className="text-center mb-8">
@@ -168,17 +169,17 @@ function PersonPicker({
             />
           </motion.div>
         )}
-        <select
+        <SearchableSelect
           value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="text-sm"
-        >
-          {members.map((m) => (
-            <option key={m.id} value={m.id}>
-              {m.name} — {m.birthYear ?? "?"}
-            </option>
-          ))}
-        </select>
+          onChange={onChange}
+          options={members.map((m) => ({
+            value: m.id,
+            label: m.name,
+            sublabel: String(m.birthYear ?? "?"),
+          }))}
+          ariaLabel={label}
+          className="w-full"
+        />
       </div>
     </div>
   );

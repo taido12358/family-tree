@@ -29,11 +29,18 @@ export default function LoginPage() {
     }
   };
 
+  // Tự điền nhanh từ danh sách tài khoản mẫu (mật khẩu mặc định: secret)
+  const fillSample = (sampleEmail: string) => {
+    setEmail(sampleEmail);
+    setPassword("secret");
+    setErr(null);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 1.9 }}
+      transition={{ duration: 0.3, delay: 0 }}
       className="max-w-md mx-auto mt-10"
     >
       <div className="text-center mb-8">
@@ -50,59 +57,79 @@ export default function LoginPage() {
 
       <div className="glass-strong rounded-2xl p-6 sm:p-8 grain relative">
         {err && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mb-4 p-3 rounded-lg bg-rose-base/15 border border-rose-base/30 text-rose-glow text-sm"
-            >
-              {err}
-            </motion.div>
-          )}
-
-          <label className="block mb-4">
-            <span className="font-mono text-[10px] tracking-[0.2em] text-violet-glow/70 uppercase block mb-2">
-              EMAIL
-            </span>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="hung@example.com"
-              autoComplete="email"
-            />
-          </label>
-          <label className="block mb-6">
-            <span className="font-mono text-[10px] tracking-[0.2em] text-violet-glow/70 uppercase block mb-2">
-              MẬT KHẨU
-            </span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-              placeholder="••••••"
-              autoComplete="current-password"
-            />
-          </label>
-
-          <button
-            onClick={onSubmit}
-            disabled={loading}
-            data-cursor-hover
-            className="magnetic-button w-full py-3 rounded-xl font-semibold text-white tracking-wider text-sm uppercase disabled:opacity-50 disabled:cursor-wait"
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            role="alert"
+            className="mb-4 p-3 rounded-lg bg-rose-base/15 border border-rose-base/30 text-rose-glow text-sm"
           >
-            {loading ? "Đang xác thực…" : "Đăng nhập →"}
-          </button>
+            {err}
+          </motion.div>
+        )}
 
-          <div className="mt-6 pt-5 border-t border-white/5">
-            <div className="font-mono text-[10px] tracking-[0.2em] text-violet-glow/60 mb-3">
-              ▸ TÀI KHOẢN MẪU (mật khẩu: <code className="text-gold-300">secret</code>)
-            </div>
-            <ul className="space-y-1 text-[12px] text-white/60">
-              <SampleAcc email="hung@example.com" desc="sửa nhánh ông Hùng" />
-              <SampleAcc email="lan@example.com" desc="sửa nhánh bà Lan" />
-              <SampleAcc email="tai@example.com" desc="sửa nhánh anh Tài" />
-            <SampleAcc email="admin@example.com" desc="admin — sửa tất cả" />
+        <label className="block mb-4">
+          <span className="font-mono text-[10px] tracking-[0.2em] text-violet-glow/70 uppercase block mb-2">
+            EMAIL
+          </span>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="hung@example.com"
+            autoComplete="email"
+          />
+        </label>
+        <label className="block mb-6">
+          <span className="font-mono text-[10px] tracking-[0.2em] text-violet-glow/70 uppercase block mb-2">
+            MẬT KHẨU
+          </span>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+            placeholder="••••••"
+            autoComplete="current-password"
+          />
+        </label>
+
+        <button
+          onClick={onSubmit}
+          disabled={loading}
+          data-cursor-hover
+          className="magnetic-button w-full py-3 rounded-xl font-semibold text-white tracking-wider text-sm uppercase disabled:opacity-50 disabled:cursor-wait"
+        >
+          {loading ? "Đang xác thực…" : "Đăng nhập →"}
+        </button>
+
+        <div className="mt-6 pt-5 border-t border-white/5">
+          <div className="font-mono text-[10px] tracking-[0.2em] text-violet-glow/60 mb-3">
+            ▸ TÀI KHOẢN MẪU{" "}
+            <span className="text-white/40">(bấm để điền nhanh · mật khẩu:</span>{" "}
+            <code className="text-gold-300">secret</code>
+            <span className="text-white/40">)</span>
+          </div>
+          <ul className="space-y-1.5 text-[12px]">
+            <SampleAcc
+              email="hung@example.com"
+              desc="sửa nhánh ông Hùng"
+              onPick={fillSample}
+            />
+            <SampleAcc
+              email="lan@example.com"
+              desc="sửa nhánh bà Lan"
+              onPick={fillSample}
+            />
+            <SampleAcc
+              email="tai@example.com"
+              desc="sửa nhánh anh Tài"
+              onPick={fillSample}
+            />
+            <SampleAcc
+              email="admin@example.com"
+              desc="admin — sửa tất cả"
+              onPick={fillSample}
+            />
           </ul>
         </div>
       </div>
@@ -110,11 +137,27 @@ export default function LoginPage() {
   );
 }
 
-function SampleAcc({ email, desc }: { email: string; desc: string }) {
+function SampleAcc({
+  email,
+  desc,
+  onPick,
+}: {
+  email: string;
+  desc: string;
+  onPick: (email: string) => void;
+}) {
   return (
-    <li className="flex items-center justify-between gap-3 font-mono">
-      <code className="text-cyan-glow">{email}</code>
-      <span className="text-white/40 text-[11px]">{desc}</span>
+    <li>
+      <button
+        type="button"
+        onClick={() => onPick(email)}
+        data-cursor-hover
+        aria-label={`Điền tài khoản mẫu ${email}`}
+        className="w-full flex items-center justify-between gap-3 font-mono px-2.5 py-1.5 rounded-lg border border-white/5 bg-white/[0.02] hover:bg-violet-base/15 hover:border-violet-glow/30 transition text-left group"
+      >
+        <code className="text-cyan-glow group-hover:text-cyan-glow">{email}</code>
+        <span className="text-white/40 text-[11px]">{desc}</span>
+      </button>
     </li>
   );
 }

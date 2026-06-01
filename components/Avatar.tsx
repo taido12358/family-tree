@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { avatarGradient, initialsOf } from "@/lib/avatar";
 
 interface AvatarMember {
@@ -42,12 +43,13 @@ export default function Avatar({
         className={`relative rounded-full overflow-hidden ${className}`}
         style={baseStyle}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={member.avatarUrl}
           alt={member.name}
+          fill
+          sizes={`${size}px`}
           draggable={false}
-          className="absolute inset-0 w-full h-full object-cover select-none"
+          className="object-cover select-none"
         />
       </div>
     );

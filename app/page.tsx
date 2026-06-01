@@ -11,10 +11,13 @@ export default async function HomePage({
   const data = await readFamily();
   const session = await getSession();
 
-  const defaultRoot = session?.memberId
-    ? data.members.find((m) => m.id === session.memberId)?.id ??
-      data.members[0]?.id
-    : data.members[0]?.id;
+  // Mặc định lấy người không có bố/mẹ và sinh sớm nhất làm gốc cây
+  // (= ông tổ/bà tổ). Cây mọc xuống từ đó hiển thị toàn bộ con cháu.
+  const rootless = data.members.filter((m) => !m.fatherId && !m.motherId);
+  const oldestRootless = [...rootless].sort(
+    (a, b) => (a.birthYear ?? 9999) - (b.birthYear ?? 9999)
+  )[0];
+  const defaultRoot = oldestRootless?.id ?? data.members[0]?.id;
 
   const rootId = searchParams.root ?? defaultRoot ?? "";
   const selId = searchParams.sel ?? rootId;

@@ -136,7 +136,7 @@ export default function MemberCard({
 
         {showExpandHint && (
           <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-center gap-1 text-[10px] font-mono tracking-wider text-violet-glow/80">
-            <span>{expanded ? "▲ THU GỌN" : "▼ XEM TỔ TIÊN"}</span>
+            <span>{expanded ? "▲ THU GỌN" : "▼ XEM CON CHÁU"}</span>
           </div>
         )}
 

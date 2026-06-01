@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -111,7 +111,7 @@ export default function AdminClient({ members }: { members: Member[] }) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 1.9 }}
+      transition={{ duration: 0.3, delay: 0 }}
     >
       {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
@@ -123,13 +123,22 @@ export default function AdminClient({ members }: { members: Member[] }) {
             Quản trị thành viên
           </h1>
         </div>
-        <Link
-          href="/admin/new"
-          data-cursor-hover
-          className="magnetic-button px-5 py-2.5 rounded-full text-sm font-semibold text-white tracking-wide whitespace-nowrap"
-        >
-          ＋ Thêm thành viên
-        </Link>
+        <div className="flex gap-2 flex-wrap items-center">
+          <Link
+            href="/admin/builder"
+            data-cursor-hover
+            className="px-5 py-2.5 rounded-full glass text-sm font-semibold text-violet-glow hover:bg-violet-base/20 transition whitespace-nowrap"
+          >
+            ⊹ Trình dựng cây
+          </Link>
+          <Link
+            href="/admin/new"
+            data-cursor-hover
+            className="magnetic-button px-5 py-2.5 rounded-full text-sm font-semibold text-white tracking-wide whitespace-nowrap"
+          >
+            ＋ Thêm thành viên
+          </Link>
+        </div>
       </div>
 
       {/* Toast */}
@@ -217,12 +226,9 @@ export default function AdminClient({ members }: { members: Member[] }) {
           </div>
         ) : (
           <div className="divide-y divide-white/5">
-            {filtered.map((m, i) => (
-              <motion.div
+            {filtered.map((m) => (
+              <div
                 key={m.id}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: Math.min(i * 0.02, 0.3) }}
                 className="grid grid-cols-[auto_1fr_auto] md:grid-cols-[auto_1fr_auto_auto_auto_auto] gap-3 px-4 py-3 items-center hover:bg-white/[0.03] transition group"
               >
                 {/* Avatar */}
@@ -274,6 +280,7 @@ export default function AdminClient({ members }: { members: Member[] }) {
                     data-cursor-hover
                     className="px-2.5 py-1.5 rounded-lg glass text-xs hover:bg-violet-base/20 hover:text-violet-glow transition"
                     title="Sửa"
+                    aria-label={`Sửa ${m.name}`}
                   >
                     ✎
                   </Link>
@@ -282,11 +289,12 @@ export default function AdminClient({ members }: { members: Member[] }) {
                     data-cursor-hover
                     className="px-2.5 py-1.5 rounded-lg glass text-xs text-rose-glow/70 hover:text-rose-glow hover:bg-rose-base/20 transition"
                     title="Xoá"
+                    aria-label={`Xoá ${m.name}`}
                   >
                     🗑
                   </button>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         )}
@@ -390,6 +398,15 @@ function DeleteModal({
   ).length;
   const spousesCount = member.spouseIds.length;
 
+  // Đóng bằng phím Escape
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -404,6 +421,9 @@ function DeleteModal({
         exit={{ scale: 0.9, y: 10 }}
         transition={{ type: "spring", stiffness: 250, damping: 25 }}
         onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Xác nhận xoá ${member.name}`}
         className="glass-strong rounded-2xl p-6 max-w-md w-full grain relative border-rose-base/30"
         style={{ borderWidth: 1 }}
       >

@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Member } from "@/lib/types";
 import Avatar from "@/components/Avatar";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export default function EditForm({
   member,
@@ -97,6 +98,16 @@ export default function EditForm({
     }
   };
 
+  // Đóng modal xác nhận xoá bằng phím Escape
+  useEffect(() => {
+    if (!confirmDelete) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setConfirmDelete(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [confirmDelete]);
+
   const others = allMembers.filter((m) => m.id !== member.id);
   const possibleFathers = others.filter((m) => m.gender !== "female");
   const possibleMothers = others.filter((m) => m.gender !== "male");
@@ -156,7 +167,9 @@ export default function EditForm({
     });
     setSaving(false);
     if (res.ok) {
-      setMsg({ type: "ok", text: "✓ Đã lưu thay đổi." });
+      // Admin: quay về danh sách admin để tiếp tục thao tác
+      // User thường: về trang chi tiết của chính mình
+      router.push(isAdmin ? "/admin" : `/user/${member.id}`);
       router.refresh();
     } else {
       const data = await res.json().catch(() => ({}));
@@ -168,7 +181,7 @@ export default function EditForm({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 1.9 }}
+      transition={{ duration: 0.3, delay: 0 }}
       className="max-w-3xl mx-auto"
     >
       <Link
@@ -319,30 +332,30 @@ export default function EditForm({
         <Section title="Quan hệ huyết thống">
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Bố">
-              <select
+              <SearchableSelect
                 value={form.fatherId}
-                onChange={(e) => update("fatherId", e.target.value)}
-              >
-                <option value="">— không —</option>
-                {possibleFathers.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.birthYear ?? "?"})
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => update("fatherId", v)}
+                options={possibleFathers.map((m) => ({
+                  value: m.id,
+                  label: m.name,
+                  sublabel: String(m.birthYear ?? "?"),
+                }))}
+                allowEmpty
+                ariaLabel="Chọn bố"
+              />
             </Field>
             <Field label="Mẹ">
-              <select
+              <SearchableSelect
                 value={form.motherId}
-                onChange={(e) => update("motherId", e.target.value)}
-              >
-                <option value="">— không —</option>
-                {possibleMothers.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.birthYear ?? "?"})
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => update("motherId", v)}
+                options={possibleMothers.map((m) => ({
+                  value: m.id,
+                  label: m.name,
+                  sublabel: String(m.birthYear ?? "?"),
+                }))}
+                allowEmpty
+                ariaLabel="Chọn mẹ"
+              />
             </Field>
           </div>
         </Section>
@@ -427,6 +440,9 @@ export default function EditForm({
             animate={{ scale: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 250, damping: 25 }}
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Xác nhận xoá ${member.name}`}
             className="glass-strong rounded-2xl p-6 max-w-md w-full grain relative border-rose-base/30"
             style={{ borderWidth: 1 }}
           >

@@ -229,3 +229,90 @@ select option {
     stroke-dashoffset: 0;
   }
 }
+
+/*
+  Custom cursor: CustomCursor.tsx gắn class này lên <html> CHỈ trên desktop
+  (không touch). Ẩn con trỏ hệ thống để chấm sáng + vòng tự vẽ thay thế.
+  Trên mobile/touch class không bao giờ được thêm → con trỏ gốc giữ nguyên.
+*/
+.cursor-hide,
+.cursor-hide * {
+  cursor: none !important;
+}
+
+/*
+  Tôn trọng tùy chọn "giảm chuyển động" của hệ điều hành: tắt gần hết
+  animation/transition trang trí (aurora xoay, shine, spin avatar, particle…)
+  để tránh gây khó chịu / say chuyển động cho người dùng nhạy cảm.
+*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- React Flow (trình dựng cây) — phủ theme cinematic ---------- */
+.tree-builder .react-flow {
+  background: transparent;
+}
+.tree-builder .react-flow__attribution {
+  background: rgba(5, 0, 16, 0.5);
+  color: rgba(244, 238, 251, 0.35);
+}
+/* Handle nối dây: chấm glow, phình nhẹ khi hover */
+.tree-builder .react-flow__handle {
+  border-radius: 999px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.tree-builder .react-flow__handle:hover {
+  transform: scale(1.35);
+  box-shadow: 0 0 10px currentColor;
+}
+.tree-builder .react-flow__handle-connecting {
+  box-shadow: 0 0 12px #fde68a;
+}
+/* Đường nối khi đang kéo */
+.tree-builder .react-flow__connectionline path,
+.tree-builder .react-flow__connection-path {
+  stroke: #fde68a;
+  stroke-width: 2.5;
+}
+/* Edge đang chọn → vàng nổi bật */
+.tree-builder .react-flow__edge.selected .react-flow__edge-path,
+.tree-builder .react-flow__edge:focus .react-flow__edge-path {
+  stroke: #fde68a !important;
+  stroke-width: 3;
+}
+.tree-builder .react-flow__edge-path {
+  cursor: pointer;
+}
+/* Controls + MiniMap kiểu kính */
+.tree-builder .react-flow__controls {
+  background: rgba(10, 1, 24, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.tree-builder .react-flow__controls-button {
+  background: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #a78bfa;
+}
+.tree-builder .react-flow__controls-button:hover {
+  background: rgba(167, 139, 250, 0.18);
+}
+.tree-builder .react-flow__controls-button svg {
+  fill: currentColor;
+}
+.tree-builder .react-flow__minimap {
+  background: rgba(10, 1, 24, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+}

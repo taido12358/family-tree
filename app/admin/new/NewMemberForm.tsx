@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Member } from "@/lib/types";
+import SearchableSelect from "@/components/SearchableSelect";
 
 export default function NewMemberForm({
   allMembers,
@@ -85,8 +86,7 @@ export default function NewMemberForm({
     });
     setSaving(false);
     if (res.ok) {
-      const data = await res.json();
-      router.push(`/user/${data.member.id}`);
+      router.push("/admin");
       router.refresh();
     } else {
       const data = await res.json().catch(() => ({}));
@@ -98,7 +98,7 @@ export default function NewMemberForm({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: 1.9 }}
+      transition={{ duration: 0.3, delay: 0 }}
       className="max-w-3xl mx-auto"
     >
       <Link
@@ -202,30 +202,30 @@ export default function NewMemberForm({
         <Section title="Quan hệ huyết thống (tùy chọn)">
           <div className="grid sm:grid-cols-2 gap-4">
             <Field label="Bố">
-              <select
+              <SearchableSelect
                 value={form.fatherId}
-                onChange={(e) => update("fatherId", e.target.value)}
-              >
-                <option value="">— không —</option>
-                {possibleFathers.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.birthYear ?? "?"})
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => update("fatherId", v)}
+                options={possibleFathers.map((m) => ({
+                  value: m.id,
+                  label: m.name,
+                  sublabel: String(m.birthYear ?? "?"),
+                }))}
+                allowEmpty
+                ariaLabel="Chọn bố"
+              />
             </Field>
             <Field label="Mẹ">
-              <select
+              <SearchableSelect
                 value={form.motherId}
-                onChange={(e) => update("motherId", e.target.value)}
-              >
-                <option value="">— không —</option>
-                {possibleMothers.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.name} ({m.birthYear ?? "?"})
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => update("motherId", v)}
+                options={possibleMothers.map((m) => ({
+                  value: m.id,
+                  label: m.name,
+                  sublabel: String(m.birthYear ?? "?"),
+                }))}
+                allowEmpty
+                ariaLabel="Chọn mẹ"
+              />
             </Field>
           </div>
         </Section>

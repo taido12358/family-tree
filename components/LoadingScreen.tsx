@@ -7,7 +7,18 @@ export default function LoadingScreen() {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
-    const t = setTimeout(() => setShow(false), 1900);
+    // Đã chạy trong session này → không cần show lại
+    if (
+      typeof window !== "undefined" &&
+      sessionStorage.getItem("loaderShown") === "1"
+    ) {
+      setShow(false);
+      return;
+    }
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("loaderShown", "1");
+    }
+    const t = setTimeout(() => setShow(false), 1200);
     return () => clearTimeout(t);
   }, []);
 
@@ -109,7 +120,7 @@ export default function LoadingScreen() {
                 strokeLinecap="round"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
-                transition={{ duration: 0.3, delay: 1 }}
+                transition={{ duration: 0.3, delay: 0.65 }}
               />
               <motion.path
                 d="M 50 70 L 65 30"
@@ -118,7 +129,7 @@ export default function LoadingScreen() {
                 strokeLinecap="round"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
-                transition={{ duration: 0.3, delay: 1.05 }}
+                transition={{ duration: 0.3, delay: 0.7 }}
               />
               <motion.path
                 d="M 130 70 L 115 30"
@@ -127,7 +138,7 @@ export default function LoadingScreen() {
                 strokeLinecap="round"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
-                transition={{ duration: 0.3, delay: 1 }}
+                transition={{ duration: 0.3, delay: 0.65 }}
               />
               <motion.path
                 d="M 130 70 L 155 40"
@@ -136,17 +147,17 @@ export default function LoadingScreen() {
                 strokeLinecap="round"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: 1 }}
-                transition={{ duration: 0.3, delay: 1.05 }}
+                transition={{ duration: 0.3, delay: 0.7 }}
               />
               {/* Leaf nodes */}
               {[
-                { cx: 25, cy: 40, d: 1.3 },
-                { cx: 65, cy: 30, d: 1.35 },
-                { cx: 115, cy: 30, d: 1.3 },
-                { cx: 155, cy: 40, d: 1.35 },
-                { cx: 50, cy: 70, d: 1.1 },
-                { cx: 130, cy: 70, d: 1.1 },
-                { cx: 90, cy: 110, d: 0.8 },
+                { cx: 25, cy: 40, d: 0.85 },
+                { cx: 65, cy: 30, d: 0.9 },
+                { cx: 115, cy: 30, d: 0.85 },
+                { cx: 155, cy: 40, d: 0.9 },
+                { cx: 50, cy: 70, d: 0.75 },
+                { cx: 130, cy: 70, d: 0.75 },
+                { cx: 90, cy: 110, d: 0.55 },
               ].map((n, i) => (
                 <motion.circle
                   key={i}
@@ -165,7 +176,7 @@ export default function LoadingScreen() {
             <motion.p
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1.4, duration: 0.5 }}
+              transition={{ delay: 0.85, duration: 0.5 }}
               className="text-center mt-6 font-display text-xl tracking-[0.3em] text-gradient-heritage"
             >
               GIA PHẢ
@@ -173,7 +184,7 @@ export default function LoadingScreen() {
             <motion.p
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.6 }}
-              transition={{ delay: 1.6, duration: 0.5 }}
+              transition={{ delay: 0.95, duration: 0.5 }}
               className="text-center mt-1 font-mono text-[10px] tracking-[0.2em] text-violet-glow"
             >
               KẾT NỐI THẾ HỆ
